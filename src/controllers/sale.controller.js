@@ -30,9 +30,47 @@ const getById= async(req,res)=>{
 }
 
 const getByCustomer=async(req,res)=>{
-    const sale=await saleSchema.aggregate([{$match:{"customer.name":{$eq:req.body.idCustomer}}}])
-    res.status(200).json(sale);
+  const {field,value}=req.params;
+  const sale=await saleSchema.aggregate([
+    {$lookup:{from:"customers",localField:"customer",foreignField:"_id", as:"customer"}},
+    {$match:{[`customer.${field}`]:{$eq:value}}}
+  ])
+  res.status(200).json(sale);
 }
+
+const getByProduct=async(req,res)=>{
+const {field,value}=req.params;
+const salesList=await saleSchema.aggregate([
+  {$lookup:{from:"games",localField:"product",foreignField:"_id", as:"game"}},
+  {$lookup:{from:"movies",localField:"product",foreignField:"_id", as:"movie"}},
+  {$match:{
+    $or:[{[`movie.${field}`]:{$eq:value}},{[`game.${field}`]:{$eq:value}}]
+  }}
+])
+res.status(200).json(salesList);
+}
+
+const getGain=async(req,res)=>{
+const sales=await saleSchema.aggregate([
+  {$group:{_id:null,Ganancias:{$sum:"$total"}}}
+]);
+res.status(200).json(sales);
+}
+const getByPriceR=async(req,res)=>{
+const {gte,lte}=req.params;
+const salesList=await saleSchema.aggregate([
+  {$lookup:{from:"games",localField:"product",foreignField:"_id",as:"game"}},
+  {$lookup:{from:"movies",localField:"product",foreignField:"_id",as:"movie"}},
+  {$match:{$and:[{price:{$gte:Number(gte)}},{price:{$lte:Number(lte)}}]}},
+  {$project:{
+    "movie.tittle":1,
+    "game.tittle":1,
+    price:1
+  }}
+])
+res.status(200).json(salesList);
+}
+
 const update=async(req,res)=>{
     const sale=await saleSchema.findByIdAndUpdate(req.body._id,req.body,{new:true});
 }
@@ -42,6 +80,9 @@ module.exports={
     getSales,
     getById,
     getByCustomer,
+    getByProduct,
+    getGain,
+    getByPriceR,
     update
 }
 

@@ -1,6 +1,6 @@
 //RUTAS PARA GESTIÓN DE VENTAS
 const express= require("express");
-const {newSale,getSales,getById,getByCustomer,update}= require('../controllers/sale.controller.js')
+const {newSale,getSales,getById,getByCustomer,update, getByProduct, getGain, getByPriceR}= require('../controllers/sale.controller.js')
 const {verifyToken}= require('../middlewares/authJwt.js')
 const router=express.Router();//La librería express con el método Router() pemrite la creación de rutas
 
@@ -14,7 +14,16 @@ router.get('/sale/',getSales);
 router.get('/sale/:id/',getById);
 
 //Consultar por cliente
-router.post('/sale/bycustomer/',getByCustomer);
+router.get('/sale/customer/:field/:value/',getByCustomer);
+
+//Consultar por producto
+router.get('/sale/product/:field/:value/',getByProduct);
+
+//Consultar ganancias totales
+router.get('/sale/sale/gain/',getGain);
+
+//Consultar por rango de precio de producto
+router.get('/sale/range/:gte/:lte/',getByPriceR);
 
 //Actualizar
 router.put('/sale/',update);
