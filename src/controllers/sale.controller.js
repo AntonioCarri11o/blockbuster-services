@@ -1,23 +1,31 @@
 const express= require('express');
 const saleSchema=require('../models/sale');
 const movieSchema=require('../models/movie');
+const gameSchema=require('../models/game');
 const customerShema=require('../models/customer');
+const sale = require('../models/sale');
 
 const newSale=async(req, res)=>{
     const customer=customerShema(req.body.customer);
     const product=req.body.product._id;
     const response=await customer.save();
     req.body.customer._id=response._id;
-    sale=saleSchema(req.body);
+    let sale=saleSchema(req.body);
     const now=Date.now();
     const today=new Date(now);
     sale.saleDate=today;
     const saveSale=await sale.save();
-    console.log(product);
-    const stock=await movieSchema.findById(product);
-    //const updateStock=await movieSchema.update({"_id":`${product}`},"stock")
-    stock.stock=stock.stock-sale.quantity;
-    const movie=await movieSchema.findByIdAndUpdate(product,{stock:stock.stock})
+    if(sale.productType=="Movie"){
+      const stock=await movieSchema.findById(product);
+      stock.stock=stock.stock-sale.quantity;
+      const movie=await movieSchema.findByIdAndUpdate(product,{stock:stock.stock})
+    }
+    if(sale.productType=="Game"){
+      const stock=await gameSchema.findById(product);
+      stock.stock=stock.stock-sale.quantity;
+      const movie=await gameSchema.findByIdAndUpdate(product,{stock:stock.stock})
+    }
+
     res.status(200).json({message:"Venta reliazada con éxito"});
 }
 
